@@ -1,20 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, Languages } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Languages, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   GREETING,
-  NO_MATCH,
   QUICK_REPLIES,
-  getBotResponse,
   type ChatLang,
 } from "@/lib/chatbot-rules";
 
 interface Message {
   id: string;
-  role: "user" | "bot";
+  role: "user" | "assistant";
   text: string;
   timestamp: Date;
 }
@@ -37,50 +35,63 @@ export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [lang, setLang] = useState<ChatLang>("en");
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: "greeting", role: "bot", text: GREETING["en"], timestamp: new Date() },
+    { id: "greeting", role: "assistant", text: GREETING["en"], timestamp: new Date() },
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const userId = "user-1"; // Replace with actual user ID from auth
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const addMessage = (role: "user" | "bot", text: string) => {
+  const addMessage = (role: "user" | "assistant", text: string) => {
     setMessages(prev => [
       ...prev,
       { id: Date.now().toString(), role, text, timestamp: new Date() },
     ]);
   };
 
-  const handleSend = (text?: string) => {
+  const handleSend = async (text?: string) => {
     const userText = text ?? input.trim();
-    if (!userText) return;
+    if (!userText || isLoading) return;
+
     setInput("");
-
     addMessage("user", userText);
+    setIsLoading(true);
 
-    const lowerText = userText.toLowerCase();
-    const isLangSwitch =
-      lowerText.includes("hindi") || lowerText.includes("हिंदी") ||
-      lowerText.includes("english") || lowerText.includes("switch") ||
-      lowerText.includes("बदलें");
+    try {
+      // Send message to AI chatbot API
+      const response = await fetch("/api/ai-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          message: userText,
+          language: lang,
+        }),
+      });
 
-    setTimeout(() => {
-      if (isLangSwitch) {
-        const newLang: ChatLang = lang === "en" ? "hi" : "en";
-        setLang(newLang);
-        addMessage("bot", getBotResponse(userText, newLang));
+      if (response.ok) {
+        const data = await response.json();
+        addMessage("assistant", data.assistantMessage.content);
       } else {
-        addMessage("bot", getBotResponse(userText, lang));
+        addMessage("assistant", "Sorry, I couldn't process your request at this moment. Please try again.");
       }
-    }, 400);
+    } catch (error) {
+      console.error("Chat error:", error);
+      addMessage("assistant", "I encountered an error. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLangToggle = () => {
     const newLang: ChatLang = lang === "en" ? "hi" : "en";
     setLang(newLang);
-    setMessages([{ id: "greeting", role: "bot", text: GREETING[newLang], timestamp: new Date() }]);
+    setMessages([{ id: "greeting", role: "assistant", text: GREETING[newLang], timestamp: new Date() }]);
   };
 
   return (
@@ -142,18 +153,29 @@ export default function Chatbot() {
             >
               <div className={cn(
                 "h-7 w-7 rounded-full flex items-center justify-center shrink-0",
-                msg.role === "bot" ? "bg-primary text-primary-foreground" : "bg-muted"
+                msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-muted"
               )}>
-                {msg.role === "bot" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                {msg.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
               </div>
               <div className={cn(
                 "rounded-xl px-3 py-2 text-sm max-w-[80%]",
-                msg.role === "bot" ? "bg-muted" : "bg-primary text-primary-foreground"
+                msg.role === "assistant" ? "bg-muted" : "bg-primary text-primary-foreground"
               )}>
                 {renderText(msg.text)}
               </div>
             </div>
           ))}
+          {isLoading && (
+            <div className="flex gap-2">
+              <div className="h-7 w-7 rounded-full flex items-center justify-center bg-primary text-primary-foreground shrink-0">
+                <Bot className="h-4 w-4" />
+              </div>
+              <div className="rounded-xl px-3 py-2 bg-muted flex items-center gap-2">
+                <Loader className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Thinking...</span>
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
@@ -163,8 +185,8 @@ export default function Chatbot() {
               <Badge
                 key={i}
                 variant="outline"
-                className="cursor-pointer text-xs hover-elevate"
-                onClick={() => handleSend(reply)}
+                className="cursor-pointer text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => !isLoading && handleSend(reply)}
                 data-testid={`button-quick-reply-${i}`}
               >
                 {reply}
@@ -176,11 +198,17 @@ export default function Chatbot() {
               placeholder={lang === "en" ? "Type your question..." : "अपना प्रश्न लिखें..."}
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSend()}
+              onKeyDown={e => e.key === "Enter" && !isLoading && handleSend()}
+              disabled={isLoading}
               className="text-sm"
               data-testid="input-chatbot-message"
             />
-            <Button size="icon" onClick={() => handleSend()} data-testid="button-chatbot-send">
+            <Button 
+              size="icon" 
+              onClick={() => handleSend()} 
+              disabled={isLoading}
+              data-testid="button-chatbot-send"
+            >
               <Send className="h-4 w-4" />
             </Button>
           </div>

@@ -1,15 +1,21 @@
-import { Users, Shield, AlertTriangle, Clock, Bell } from "lucide-react";
+import { Users, Shield, AlertTriangle, Clock, Bell, Wallet, TrendingUp } from "lucide-react";
+import { useState } from "react";
 import KPICard from "@/components/KPICard";
 import AlertCard from "@/components/AlertCard";
 import RiskGauge from "@/components/RiskGauge";
 import FinancialActionCard from "@/components/FinancialActionCard";
+import WalletManagement from "@/components/WalletManagement";
+import InsuranceManagement from "@/components/InsuranceManagement";
+import EMIManagement from "@/components/EMIManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { useLanguage } from "@/components/LanguageProvider";
 
 export default function Dashboard() {
   const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState("overview");
   
   // todo: remove mock functionality
   const mockAlerts = [
@@ -67,74 +73,107 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{t("dashboardTitle")}</h1>
           <p className="text-muted-foreground">{t("dashboardSubtitle")}</p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <KPICard title={t("currentRiskLevel")} value={t("highRiskLabel")} icon={AlertTriangle} trend="up" trendValue={t("fromMedium")} />
-          <KPICard title={t("activeAlerts")} value="3" icon={Bell} />
-          <KPICard title={t("protectedAmount")} value="₹75,000" icon={Shield} trend="up" trendValue={`+₹25,000 ${t("today")}`} />
-          <KPICard title={t("nextCheck")} value="2h" icon={Clock} />
-        </div>
+        {/* Tabs for different sections */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="wallet">Wallet</TabsTrigger>
+            <TabsTrigger value="insurance">Insurance</TabsTrigger>
+            <TabsTrigger value="emi">EMI</TabsTrigger>
+          </TabsList>
 
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          <RiskGauge score={75} title={t("currentRiskScore")} />
-          <RiskGauge score={45} title={t("sevenDayForecast")} />
-          <RiskGauge score={20} title={t("thirtyDayOutlook")} />
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-8 mb-8">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">{t("activeAlerts")}</h2>
-              <Link href="/alerts">
-                <Button variant="outline" size="sm" data-testid="button-view-all-alerts">
-                  {t("viewAll")}
-                </Button>
-              </Link>
+          {/* OVERVIEW TAB */}
+          <TabsContent value="overview" className="space-y-8">
+            {/* KPI Cards */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <KPICard title={t("currentRiskLevel")} value={t("highRiskLabel")} icon={AlertTriangle} trend="up" trendValue={t("fromMedium")} />
+              <KPICard title={t("activeAlerts")} value="3" icon={Bell} />
+              <KPICard title={t("protectedAmount")} value="₹75,000" icon={Shield} trend="up" trendValue={`+₹25,000 ${t("today")}`} />
+              <KPICard title={t("nextCheck")} value="2h" icon={Clock} />
             </div>
-            <div className="space-y-4">
-              {mockAlerts.map(alert => (
-                <AlertCard key={alert.id} {...alert} />
-              ))}
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">{t("financialActions")}</h2>
-            <div className="space-y-4">
-              {mockActions.map(action => (
-                <FinancialActionCard key={action.id} {...action} />
-              ))}
+            {/* Risk Gauges */}
+            <div className="grid lg:grid-cols-3 gap-6">
+              <RiskGauge score={75} title={t("currentRiskScore")} />
+              <RiskGauge score={45} title={t("sevenDayForecast")} />
+              <RiskGauge score={20} title={t("thirtyDayOutlook")} />
             </div>
-          </div>
-        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("recentActivity")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { time: `10 ${t("minutesAgo")}`, event: "Alert triggered for Mumbai region", type: "alert" },
-                { time: `2 ${t("hoursAgo")}`, event: "Insurance protection activated", type: "action" },
-                { time: `5 ${t("hoursAgo")}`, event: "Risk level changed from Medium to High", type: "risk" },
-                { time: `1 ${t("daysAgo")}`, event: "Fund transfer completed successfully", type: "success" }
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0">
-                  <div className="h-2 w-2 rounded-full bg-primary mt-2" />
-                  <div className="flex-1">
-                    <p className="font-medium">{item.event}</p>
-                    <p className="text-sm text-muted-foreground">{item.time}</p>
-                  </div>
+            {/* Alerts & Financial Actions */}
+            <div className="grid lg:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">{t("activeAlerts")}</h2>
+                  <Link href="/alerts">
+                    <Button variant="outline" size="sm" data-testid="button-view-all-alerts">
+                      {t("viewAll")}
+                    </Button>
+                  </Link>
                 </div>
-              ))}
+                <div className="space-y-4">
+                  {mockAlerts.map(alert => (
+                    <AlertCard key={alert.id} {...alert} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">{t("financialActions")}</h2>
+                <div className="space-y-4">
+                  {mockActions.map(action => (
+                    <FinancialActionCard key={action.id} {...action} />
+                  ))}
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("recentActivity")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { time: `10 ${t("minutesAgo")}`, event: "Alert triggered for Mumbai region", type: "alert" },
+                    { time: `2 ${t("hoursAgo")}`, event: "Insurance protection activated", type: "action" },
+                    { time: `5 ${t("hoursAgo")}`, event: "Risk level changed from Medium to High", type: "risk" },
+                    { time: `1 ${t("daysAgo")}`, event: "Fund transfer completed successfully", type: "success" }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0">
+                      <div className="h-2 w-2 rounded-full bg-primary mt-2" />
+                      <div className="flex-1">
+                        <p className="font-medium">{item.event}</p>
+                        <p className="text-sm text-muted-foreground">{item.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* WALLET TAB */}
+          <TabsContent value="wallet">
+            <WalletManagement />
+          </TabsContent>
+
+          {/* INSURANCE TAB */}
+          <TabsContent value="insurance">
+            <InsuranceManagement />
+          </TabsContent>
+
+          {/* EMI TAB */}
+          <TabsContent value="emi">
+            <EMIManagement />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

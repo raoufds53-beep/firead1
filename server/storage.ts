@@ -1,12 +1,70 @@
-import { type User, type InsertUser, type ActionLog, type InsertActionLog } from "@shared/schema";
+import {
+  type User,
+  type InsertUser,
+  type ActionLog,
+  type InsertActionLog,
+  type WalletAccount,
+  type InsertWalletAccount,
+  type Transaction,
+  type InsertTransaction,
+  type EMI,
+  type InsertEMI,
+  type Insurance,
+  type InsertInsurance,
+  type WeatherData,
+  type RiskPrediction,
+  type ChatMessage,
+  type InsertChatMessage,
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
+  // User Management
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+
+  // Wallet Accounts
+  getWalletAccount(id: string): Promise<WalletAccount | undefined>;
+  getUserWalletAccounts(userId: string): Promise<WalletAccount[]>;
+  createWalletAccount(account: InsertWalletAccount): Promise<WalletAccount>;
+  updateWalletBalance(accountId: string, amount: number): Promise<WalletAccount>;
+
+  // Transactions
+  getTransaction(id: string): Promise<Transaction | undefined>;
+  getUserTransactions(userId: string): Promise<Transaction[]>;
+  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  updateTransactionStatus(transactionId: string, status: "pending" | "completed" | "failed"): Promise<Transaction>;
+
+  // EMI
+  getEMI(id: string): Promise<EMI | undefined>;
+  getUserEMI(userId: string): Promise<EMI[]>;
+  createEMI(emi: InsertEMI): Promise<EMI>;
+  pauseEMI(emiId: string, pauseUntil: number): Promise<EMI>;
+  resumeEMI(emiId: string): Promise<EMI>;
+
+  // Insurance
+  getInsurance(id: string): Promise<Insurance | undefined>;
+  getUserInsurance(userId: string): Promise<Insurance[]>;
+  createInsurance(insurance: InsertInsurance): Promise<Insurance>;
+  activateInsurance(insuranceId: string): Promise<Insurance>;
+
+  // Action Logs
   getActionLogs(): Promise<ActionLog[]>;
+  getUserActionLogs(userId: string): Promise<ActionLog[]>;
   createActionLog(log: InsertActionLog): Promise<ActionLog>;
+
+  // Weather & Risk Data
+  getAllWeatherData(): Promise<WeatherData[]>;
+  getWeatherByLocation(location: string): Promise<WeatherData[]>;
+  createWeatherData(data: WeatherData): Promise<WeatherData>;
+  getAllRiskPredictions(): Promise<RiskPrediction[]>;
+  getUserRiskPrediction(userId: string): Promise<RiskPrediction | undefined>;
+  createRiskPrediction(prediction: RiskPrediction): Promise<RiskPrediction>;
+
+  // Chat Messages
+  getChatHistory(userId: string): Promise<ChatMessage[]>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
 }
 
 const MOCK_ACTION_LOGS: ActionLog[] = [
@@ -15,32 +73,32 @@ const MOCK_ACTION_LOGS: ActionLog[] = [
   { id: "3", userId: "u3", userName: "Amit Patel", location: "Nashik", actionType: "emi_pause", status: "completed", riskLevel: "high", details: "Loan EMI paused for 3 months", timestamp: Date.now() - 25 * 60000 },
   { id: "4", userId: "u4", userName: "Sunita Desai", location: "Mumbai", actionType: "insurance", status: "triggered", riskLevel: "high", details: "Crop protection fund activated", timestamp: Date.now() - 60 * 60000 },
   { id: "5", userId: "u5", userName: "Vikram Singh", location: "Thane", actionType: "fund_transfer", status: "completed", riskLevel: "low", details: "₹10,000 moved to safe savings", timestamp: Date.now() - 2 * 60 * 60000 },
-  { id: "6", userId: "u6", userName: "Anita Joshi", location: "Nagpur", actionType: "alert_sent", status: "completed", riskLevel: "safe", details: "Routine weather alert sent", timestamp: Date.now() - 3 * 60 * 60000 },
-  { id: "7", userId: "u7", userName: "Ravi Gupta", location: "Mumbai", actionType: "insurance", status: "completed", riskLevel: "high", details: "Emergency insurance triggered", timestamp: Date.now() - 4 * 60 * 60000 },
-  { id: "8", userId: "u8", userName: "Meena Patil", location: "Pune", actionType: "emi_pause", status: "failed", riskLevel: "medium", details: "EMI pause request pending bank approval", timestamp: Date.now() - 5 * 60 * 60000 },
-  { id: "9", userId: "u1", userName: "Rajesh Kumar", location: "Mumbai", actionType: "fund_transfer", status: "completed", riskLevel: "high", details: "₹50,000 emergency transfer completed", timestamp: Date.now() - 6 * 60 * 60000 },
-  { id: "10", userId: "u9", userName: "Kavita Shah", location: "Nashik", actionType: "alert_sent", status: "completed", riskLevel: "high", details: "Flood warning alert sent to 342 users", timestamp: Date.now() - 7 * 60 * 60000 },
-  { id: "11", userId: "u10", userName: "Suresh Nair", location: "Thane", actionType: "insurance", status: "triggered", riskLevel: "medium", details: "Wind damage coverage activated", timestamp: Date.now() - 8 * 60 * 60000 },
-  { id: "12", userId: "u11", userName: "Deepa Kulkarni", location: "Nagpur", actionType: "fund_transfer", status: "completed", riskLevel: "low", details: "Preventive fund transfer of ₹15,000", timestamp: Date.now() - 10 * 60 * 60000 },
-  { id: "13", userId: "u12", userName: "Arun Mehta", location: "Mumbai", actionType: "emi_pause", status: "completed", riskLevel: "high", details: "Home loan EMI paused for disaster period", timestamp: Date.now() - 12 * 60 * 60000 },
-  { id: "14", userId: "u13", userName: "Pooja Verma", location: "Pune", actionType: "alert_sent", status: "completed", riskLevel: "medium", details: "Moderate wind advisory sent", timestamp: Date.now() - 14 * 60 * 60000 },
-  { id: "15", userId: "u14", userName: "Kiran Bhat", location: "Nashik", actionType: "insurance", status: "completed", riskLevel: "high", details: "Crop flood insurance activated", timestamp: Date.now() - 16 * 60 * 60000 },
-  { id: "16", userId: "u15", userName: "Neha Rao", location: "Thane", actionType: "fund_transfer", status: "triggered", riskLevel: "medium", details: "₹30,000 transfer in progress", timestamp: Date.now() - 18 * 60 * 60000 },
-  { id: "17", userId: "u16", userName: "Dinesh Choudhary", location: "Nagpur", actionType: "alert_sent", status: "completed", riskLevel: "safe", details: "All-clear status notification sent", timestamp: Date.now() - 20 * 60 * 60000 },
-  { id: "18", userId: "u17", userName: "Geeta Pillai", location: "Mumbai", actionType: "emi_pause", status: "completed", riskLevel: "high", details: "Business loan EMI paused", timestamp: Date.now() - 22 * 60 * 60000 },
-  { id: "19", userId: "u18", userName: "Mohan Tiwari", location: "Pune", actionType: "insurance", status: "failed", riskLevel: "medium", details: "Insurance activation pending verification", timestamp: Date.now() - 23 * 60 * 60000 },
-  { id: "20", userId: "u19", userName: "Shalini Dubey", location: "Nashik", actionType: "fund_transfer", status: "completed", riskLevel: "high", details: "₹75,000 emergency fund transfer", timestamp: Date.now() - 24 * 60 * 60000 },
 ];
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private walletAccounts: Map<string, WalletAccount>;
+  private transactions: Map<string, Transaction>;
+  private emis: Map<string, EMI>;
+  private insurances: Map<string, Insurance>;
   private actionLogs: ActionLog[];
+  private weatherData: WeatherData[];
+  private riskPredictions: Map<string, RiskPrediction>;
+  private chatMessages: ChatMessage[];
 
   constructor() {
     this.users = new Map();
+    this.walletAccounts = new Map();
+    this.transactions = new Map();
+    this.emis = new Map();
+    this.insurances = new Map();
     this.actionLogs = [...MOCK_ACTION_LOGS];
+    this.weatherData = [];
+    this.riskPredictions = new Map();
+    this.chatMessages = [];
   }
 
+  // User Management
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
@@ -51,19 +109,206 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const user: User = { ...insertUser, id, role: insertUser.role || "user" };
     this.users.set(id, user);
     return user;
   }
 
+  // Wallet Accounts
+  async getWalletAccount(id: string): Promise<WalletAccount | undefined> {
+    return this.walletAccounts.get(id);
+  }
+
+  async getUserWalletAccounts(userId: string): Promise<WalletAccount[]> {
+    return Array.from(this.walletAccounts.values()).filter(a => a.userId === userId);
+  }
+
+  async createWalletAccount(account: InsertWalletAccount): Promise<WalletAccount> {
+    const id = randomUUID();
+    const newAccount: WalletAccount = {
+      ...account,
+      id,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    this.walletAccounts.set(id, newAccount);
+    return newAccount;
+  }
+
+  async updateWalletBalance(accountId: string, amount: number): Promise<WalletAccount> {
+    const account = this.walletAccounts.get(accountId);
+    if (!account) throw new Error("Account not found");
+    account.balance = amount;
+    account.updatedAt = Date.now();
+    this.walletAccounts.set(accountId, account);
+    return account;
+  }
+
+  // Transactions
+  async getTransaction(id: string): Promise<Transaction | undefined> {
+    return this.transactions.get(id);
+  }
+
+  async getUserTransactions(userId: string): Promise<Transaction[]> {
+    return Array.from(this.transactions.values())
+      .filter(t => t.userId === userId)
+      .sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const id = randomUUID();
+    const newTransaction: Transaction = {
+      ...transaction,
+      id,
+      timestamp: Date.now(),
+    };
+    this.transactions.set(id, newTransaction);
+    return newTransaction;
+  }
+
+  async updateTransactionStatus(
+    transactionId: string,
+    status: "pending" | "completed" | "failed"
+  ): Promise<Transaction> {
+    const transaction = this.transactions.get(transactionId);
+    if (!transaction) throw new Error("Transaction not found");
+    transaction.status = status;
+    this.transactions.set(transactionId, transaction);
+    return transaction;
+  }
+
+  // EMI
+  async getEMI(id: string): Promise<EMI | undefined> {
+    return this.emis.get(id);
+  }
+
+  async getUserEMI(userId: string): Promise<EMI[]> {
+    return Array.from(this.emis.values()).filter(e => e.userId === userId);
+  }
+
+  async createEMI(emi: InsertEMI): Promise<EMI> {
+    const id = randomUUID();
+    const newEMI: EMI = {
+      ...emi,
+      id,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    this.emis.set(id, newEMI);
+    return newEMI;
+  }
+
+  async pauseEMI(emiId: string, pauseUntil: number): Promise<EMI> {
+    const emi = this.emis.get(emiId);
+    if (!emi) throw new Error("EMI not found");
+    emi.status = "paused";
+    emi.pausedUntil = pauseUntil;
+    emi.updatedAt = Date.now();
+    this.emis.set(emiId, emi);
+    return emi;
+  }
+
+  async resumeEMI(emiId: string): Promise<EMI> {
+    const emi = this.emis.get(emiId);
+    if (!emi) throw new Error("EMI not found");
+    emi.status = "active";
+    emi.pausedUntil = undefined;
+    emi.updatedAt = Date.now();
+    this.emis.set(emiId, emi);
+    return emi;
+  }
+
+  // Insurance
+  async getInsurance(id: string): Promise<Insurance | undefined> {
+    return this.insurances.get(id);
+  }
+
+  async getUserInsurance(userId: string): Promise<Insurance[]> {
+    return Array.from(this.insurances.values()).filter(i => i.userId === userId);
+  }
+
+  async createInsurance(insurance: InsertInsurance): Promise<Insurance> {
+    const id = randomUUID();
+    const newInsurance: Insurance = {
+      ...insurance,
+      id,
+      createdAt: Date.now(),
+    };
+    this.insurances.set(id, newInsurance);
+    return newInsurance;
+  }
+
+  async activateInsurance(insuranceId: string): Promise<Insurance> {
+    const insurance = this.insurances.get(insuranceId);
+    if (!insurance) throw new Error("Insurance not found");
+    insurance.status = "triggered";
+    insurance.activatedAt = Date.now();
+    this.insurances.set(insuranceId, insurance);
+    return insurance;
+  }
+
+  // Action Logs
   async getActionLogs(): Promise<ActionLog[]> {
     return [...this.actionLogs].sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  async getUserActionLogs(userId: string): Promise<ActionLog[]> {
+    return this.actionLogs
+      .filter(log => log.userId === userId)
+      .sort((a, b) => b.timestamp - a.timestamp);
   }
 
   async createActionLog(log: InsertActionLog): Promise<ActionLog> {
     const newLog: ActionLog = { ...log, id: randomUUID(), timestamp: Date.now() };
     this.actionLogs.unshift(newLog);
     return newLog;
+  }
+
+  // Weather & Risk Data
+  async getAllWeatherData(): Promise<WeatherData[]> {
+    return this.weatherData;
+  }
+
+  async getWeatherByLocation(location: string): Promise<WeatherData[]> {
+    return this.weatherData.filter(w => w.location === location);
+  }
+
+  async createWeatherData(data: WeatherData): Promise<WeatherData> {
+    this.weatherData.push(data);
+    return data;
+  }
+
+  async getAllRiskPredictions(): Promise<RiskPrediction[]> {
+    return Array.from(this.riskPredictions.values())
+      .sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  async getUserRiskPrediction(userId: string): Promise<RiskPrediction | undefined> {
+    return Array.from(this.riskPredictions.values())
+      .filter(p => p.userId === userId)
+      .sort((a, b) => b.timestamp - a.timestamp)[0];
+  }
+
+  async createRiskPrediction(prediction: RiskPrediction): Promise<RiskPrediction> {
+    this.riskPredictions.set(prediction.id, prediction);
+    return prediction;
+  }
+
+  // Chat Messages
+  async getChatHistory(userId: string): Promise<ChatMessage[]> {
+    return this.chatMessages
+      .filter(m => m.userId === userId)
+      .sort((a, b) => a.timestamp - b.timestamp);
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const newMessage: ChatMessage = {
+      ...message,
+      id: randomUUID(),
+      timestamp: Date.now(),
+    };
+    this.chatMessages.push(newMessage);
+    return newMessage;
   }
 }
 
