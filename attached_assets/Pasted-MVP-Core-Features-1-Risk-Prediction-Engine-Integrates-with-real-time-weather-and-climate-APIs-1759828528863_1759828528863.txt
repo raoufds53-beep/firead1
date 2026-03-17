@@ -1,0 +1,145 @@
+MVP Core Features
+
+1. 🌦️ Risk Prediction Engine
+
+Integrates with real-time weather and climate APIs (like OpenWeatherMap or IMD).
+
+Uses geolocation to detect upcoming risks — flood, drought, or cyclone.
+
+Calculates risk scores (Low, Medium, High) based on severity, frequency, and location.
+
+Displays results through a simple visual dashboard.
+
+
+2. 💰 Financial Action Automation
+
+When the system detects high risk, it automatically:
+
+Sends a trigger signal to partner APIs (bank, insurance, micro-finance).
+
+Recommends protective actions such as:
+
+Transferring funds to safe accounts.
+
+Temporarily freezing or pausing loan EMIs.
+
+Activating micro-insurance.
+
+
+
+In the MVP, these are simulated actions, showing proof of concept without real financial transactions.
+
+
+3. 📱 Localized Alert System
+
+Users receive alerts via SMS, WhatsApp, or app notifications.
+
+Alerts are personalized (based on location & profile) and localized (available in regional languages).
+
+Messages include clear instructions like:
+
+> “Heavy rainfall expected in 48 hours. Move savings to safe account and activate crop protection fund.”
+
+
+
+
+4. 🔗 Admin / Partner Dashboard
+
+Web dashboard built using React + Firebase.
+
+Displays:
+
+Active risk zones
+
+Number of at-risk users
+
+Triggered financial actions
+
+Historical performance & alerts
+
+
+Enables NGOs or financial institutions to monitor real-time community vulnerability.
+
+
+
+---
+
+🧠 Tech Stack (MVP Build)
+
+Layer	Tools / Services
+
+Frontend	React.js (for web app) or Flutter (for mobile app)
+Backend	Node.js or Firebase Cloud Functions
+Database	Firebase Firestore
+Auth	Firebase Authentication
+Hosting	Firebase Hosting
+APIs	OpenWeather / IMD for weather data, Twilio or WhatsApp API for alerts
+Visualization	Chart.js or Recharts for risk dashboard
+
+
+
+---
+
+🧪 User Flow
+
+1. User Registration:
+
+User signs up, enters location and optional financial info (loan, bank, crop type, etc).
+
+
+
+2. Risk Monitoring:
+
+FiReAd continuously fetches weather data for that region.
+
+
+
+3. Risk Detected:
+
+If risk level = high → triggers alert and financial recommendations.
+
+
+
+4. User Alerted:
+
+User gets local-language SMS or app alert with next steps.
+
+
+
+5. Dashboard Update:
+
+Admin dashboard logs the event, showing how many users were alerted or protected.
+
+
+
+
+
+---
+
+🧭 Scope of MVP
+
+Pilot focus: Flood risk detection in one region.
+
+Target users: 100 households or small farmers (simulation dataset).
+
+Single financial partner (mock API).
+
+English + one regional language (e.g., Hindi).
+
+Demonstrate end-to-end automation, from prediction → alert → suggested action.
+
+
+
+---
+
+🌱 Future Enhancements (Post-MVP)
+
+Integration with real bank and insurance APIs for automated execution.
+
+Use of AI/ML models for vulnerability prediction (income, assets, location).
+
+Offline-mode alerts for low-connectivity areas.
+
+Expansion to cover multiple climate risks (heatwaves, cyclones, droughts).
+
+AI-powered chatbot for user financial guidance.
